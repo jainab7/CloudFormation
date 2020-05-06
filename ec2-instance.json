@@ -1,0 +1,33 @@
+{
+  
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  
+  "Description" : "Standalone instance",
+  
+  "Resources" : {     
+
+    "WebServer": {  
+
+      "Type": "AWS::EC2::Instance",
+	  
+	  "Properties" : {
+	  
+		"ImageId" : "ami-e024bf89",
+		
+		"InstanceType" : "t2.micro",
+		
+		"KeyName" : "instance"
+			
+		}
+		
+	}
+	
+	
+	
+   }
+	  
+	  
+
+
+
+}
