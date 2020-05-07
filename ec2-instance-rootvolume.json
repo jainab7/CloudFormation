@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
   
-  "Description" : "Creating an instance with root volume customized",
+  "Description" : "Creating an instance with user data",
   
   "Parameters" : {
   
@@ -11,6 +11,12 @@
 		   "Type":"AWS::EC2::Subnet::Id"
 	     
 		},
+		
+		"Ec2RootVolumeSize": {
+           "Description": " Ec2 root volume size",
+           "Type": "String",
+           "Default": "8"
+     },
 		
 	   "SecurityGroupId" : {
 	        
@@ -54,11 +60,11 @@
         "InstanceType" : {"Ref":"InstanceType"},
 		"BlockDeviceMappings" : [
 		  {
-		    "DeviceName" : "/dev/sda",
+		    "DeviceName" : "/dev/sda1",
 			"Ebs" : {
 			   "VolumeType" : "gp2",
 			   "DeleteOnTermination" : "True",
-			   "VolumeSize" : "10"
+			   "VolumeSize" : {"Ref":"Ec2RootVolumeSize"}
 			
 			 }
 		  
@@ -73,9 +79,6 @@
 	
 	
 	}
-
-
-
    },
    
    "Outputs":{
