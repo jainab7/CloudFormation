@@ -27,7 +27,26 @@
                 "t3.micro"
             ],
             "ConstraintDescription": "Must be a valid EC2 instance"
-        }
+        },
+		"AvailabilityZone" : {
+		
+		    "Description": "Availability Zone",
+			"Type": "String",
+			"Default": "us-east-1a",
+			"AllowedValues": ["us-east-1a","us-east-1b"],
+			"ConstraintDescription": "Availability Zone"		
+		},
+		
+		"SubnetId" : {
+		   
+		   "Description" : "Subnet Id",
+		   "Type" : "String",
+		   "Default" : "subnet-02a7fae2d46d35e9e",
+           "AllowedValues" : ["subnet-02a7fae2d46d35e9e","subnet-023f52952fbfd81e1"],
+           "ConstraintDescription": "Subnet id"
+		
+		
+		}
     },
     "Resources": {
         "WebServer": {
@@ -42,6 +61,8 @@
                         "Ref": "WebServerSecurityGroup"
                     }
                 ],
+				"AvailabilityZone" : {"Ref" : "AvailabilityZone"},
+				"SubnetId" : {"Ref" : "SubnetId"},
                 "KeyName": {
                     "Ref": "KeyName"
                 }
