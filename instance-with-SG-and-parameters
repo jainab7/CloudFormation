@@ -1,0 +1,117 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Standalone instance",
+    "Parameters": {
+        "KeyName": {
+            "Description": "Name existing key pair",
+            "Type": "String",
+            "MinLength": "1",
+            "MaxLength": "255",
+            "AllowedPattern": "^[a-zA-Z0-9]*$",
+            "ConstraintDescription": "Contains only ASCII Values"
+        },
+        "VolumeSize": {
+            "Description": "Volume of EC2 instance",
+            "Type": "Number",
+            "MinValue": "8",
+            "MaxValue": "10",
+            "Default": "8",
+            "ConstraintDescription": "Must be a value between 8 to 10"
+        },
+        "InstanceType": {
+            "Description": "Type of instance",
+            "Type": "String",
+            "Default": "t2.micro",
+            "AllowedValues": [
+                "t2.micro",
+                "t3.micro"
+            ],
+            "ConstraintDescription": "Must be a valid EC2 instance"
+        }
+    },
+    "Resources": {
+        "WebServer": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "ImageId": "ami-e965ba80",
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
+                "SecurityGroups": [
+                    {
+                        "Ref": "WebServerSecurityGroup"
+                    }
+                ],
+                "KeyName": {
+                    "Ref": "KeyName"
+                }
+            }
+        },
+        "WebServerSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security group for Web server",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "80",
+                        "ToPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "DataVolume": {
+            "Type": "AWS::EC2::Volume",
+            "Properties": {
+                "Size": {
+                    "Ref": "VolumeSize"
+                },
+                "AvailabilityZone": {
+                    "Fn::GetAtt": [
+                        "WebServer",
+                        "AvailabilityZone"
+                    ]
+                }
+            }
+        },
+        "MountPoint": {
+            "Type": "AWS::EC2::VolumeAttachment",
+            "Properties": {
+                "InstanceId": {
+                    "Ref": "WebServer"
+                },
+                "VolumeId": {
+                    "Ref": "DataVolume"
+                },
+                "Device": "/dev/sdh"
+            }
+        }
+    },
+      "Outputs": {
+            "WebServerId": {
+                "Description": "ID of EC2-instance",
+                "Value": {
+                    "Ref": "WebServer"
+                }
+            },
+            "WebServerSecurityGroup": {
+                "Description": "Security Group id",
+                "Value": {
+                    "Ref": "WebServerSecurityGroup"
+                }
+            },
+            "DataVolume": {
+                "Description": "Volume Id",
+                "Value": {
+                    "Ref": "DataVolume"
+                }
+            }
+        }
+}
