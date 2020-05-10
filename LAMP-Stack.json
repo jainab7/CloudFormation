@@ -1,0 +1,93 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Creating an instance with user data",
+  "Parameters" : {
+      "Subnet" : {
+	       "Description":"Select subnet",
+		   "Type":"AWS::EC2::Subnet::Id"
+		},
+	   "SecurityGroupId" : {
+			"Description":"Select Security Group",
+			"Type":"AWS::EC2::SecurityGroup::Id"
+	    },
+       "InstanceType" : {
+            "Description" : "Web Server",
+            "Type" : "String",
+            "Default":"t2.micro",			
+	        "AllowedValues":["t2.micro","t3.micro"]
+		}
+	},
+	"Mappings" : {
+	   "RegionMap" : {
+			"us-east-1"      : { "HVM64" : "ami-009d6802948d06e52"},
+			"us-west-1"      : { "HVM64" : "ami-0bdb828fd58c52235"},
+			"eu-west-1"      : { "HVM64" : "ami-047bb4163c506cd98"},
+			"ap-southeast-1" : { "HVM64" : "ami-08569b978cc4dfa10"},
+			"ap-northeast-1" : { "HVM64" : "ami-06cd52961ce9f0d85"}
+      }
+	},
+    "Resources" : {
+	  "WebServer" : {
+        "Type" : "AWS::EC2::Instance",
+		"Metadata": {
+		  "AWS::CloudFormation::Init" :{
+		    "configSets":{
+			  "Install" : ["Install"]
+			},
+			"Install" : {
+			  "packages":{
+			    "yum" : {
+				   "mariadb-server" : [],				   
+				   "httpd" : [],
+				   "php-mbstring" : []
+			     }
+			  },
+			  "services":{
+			    "sysvinit" :{
+				 "httpd" : {"enabled" : "true", "ensureRunning" : "true"},
+				 "mariadb" : {"enabled" : "true", "ensureRunning" : "true"}
+				} 
+			  }
+			}
+		  }
+		},
+        "Properties" : {
+           "ImageId" : {"Fn::FindInMap" : ["RegionMap",{"Ref":"AWS::Region"},"HVM64"]},
+           "InstanceType" : {"Ref":"InstanceType"},
+		   "UserData":{"Fn::Base64" : {"Fn::Join" : ["",[
+		                   "#!/bin/bash -xe\n",
+		                   "yum install -y aws-cfn-bootstrap\n",
+						   "amazon-linux-extras install -y lamp-mariadb10.2-php7.2 php7.2\n",
+						   "#Install files and packages from metadata\n",
+						   "/opt/aws/bin/cfn-init -v",
+						   "         --stack ",
+                            	{
+                                "Ref": "AWS::StackName"
+                            	},
+						   "         --resource WebServer ",
+					       "         --configsets Install ",
+                           "         --region ", { "Ref" : "AWS::Region" }, "\n",
+		                   "echo '<?php phpinfo(); ?>' > /var/www/html/phpinfo.php\n",
+						   "systemctl restart httpd\n",
+		                   "systemctl restart php-fpm\n",
+		                   "cd /var/www/html","\n",
+		                   "wget https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-all-languages.tar.gz","\n",
+		                   "mkdir phpMyAdmin && tar -xvzf phpMyAdmin-latest-all-languages.tar.gz -C phpMyAdmin --strip-components 1","\n",
+		                   "rm phpMyAdmin-latest-all-languages.tar.gz -y \n",
+		                   "sudo systemctl start mariadb"
+		]]
+		}
+		},
+		"SubnetId":{"Ref":"Subnet"},
+		"SecurityGroupIds":[{"Ref":"SecurityGroupId"}]
+	    }
+	}
+   },
+   "Outputs":{
+	 "WebServer":
+	    {
+		   "Description":"Instance Id",
+		   "Value":{"Ref":"WebServer"}
+		}
+   }
+}
