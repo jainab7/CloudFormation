@@ -1,205 +1,119 @@
 {
-
     "Parameters": {
-
         "Subnet": {
-
             "Description": "Select subnet",
-
             "Type": "AWS::EC2::Subnet::Id"
-
         },
-
         "InstanceType": {
-
             "Description": "Web Server",
-
             "Type": "String",
-
             "Default": "t2.micro",
-
             "AllowedValues": [
-
                 "t2.micro",
-
                 "t3.micro"
-
             ]
-
         }
-
     },
-
     "Resources": {
-	
-	    
-
         "WebServer": {
-
             "Type": "AWS::EC2::Instance",
-
             "Metadata": {
-
                 "AWS::CloudFormation::Init": {
-
                     "configSets": {
-
                         "Install": [
-
                             "Install"
-
                         ]
-
                     },
-
                     "Install": {
-
                         "packages": {
-
                             "yum": {
-
-                                "httpd": [],
-								"php": [],
-								"mariadb": []
-
+                                "httpd": []
                             }
-
                         },
-
                         "files": {
-
                             "/var/www/html/index.html": {
-
                                 "content": {
-
                                     "Fn::Join": [
-
                                         "",
-
                                         [
-
                                             "<html>\n",
-
                                             "  <head>\n",
-
                                             "    <title>AWS CloudFormation Sample</title>\n",
-
+                                            "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=ISO-8859-1\">\n",
                                             "  </head>\n",
-
                                             "  <body>\n",
-
                                             "    <h1>Welcome to the My World</h1>\n",
-
                                             "</html>\n"
-
                                         ]
-
                                     ]
-
                                 },
-
                                 "mode":
-
                                     "000644"
-
                             }
-
                         },
-
                         "services": {
-
                             "sysvinit": {
-
                                 "httpd": {
-
                                     "enabled": "true",
-
                                     "ensureRunning": "true"
-
                                 }
-
                             }
-
                         }
-
                     }
-
                 }
-
             },
-
             "Properties": {
-
                 "ImageId": "ami-009d6802948d06e52",
-
                 "InstanceType": {
-
                     "Ref": "InstanceType"
-
                 },
-
                 "UserData": {
-
                     "Fn::Base64": {
-
                         "Fn::Join": [
-
                             "",
-
                             [
-                                 
-								
                                 "#!/bin/bash -xe\n",
-								
-								"yum install -y aws-cfn-bootstrap\n",
-
+                                "yum install -y aws-cfn-bootstrap\n",
                                 "#Install files and packages from metadata\n",
-
                                 "/opt/aws/bin/cfn-init -v",
-
                                 "         --stack ",
-
                             	{
-
-                                "Ref": "AWS::StackName"
-
+                                   "Ref": "AWS::StackName"
                             	},
-
                                 "         --resource WebServer ",
-
                                 "         --configsets Install ",
-
                                 "         --region ",
-
                                 {
-
                                     "Ref": "AWS::Region"
-
                                 },
-
-                                "\n"
-
+                                "\n",
+                                "/opt/aws/bin/cfn-signal -e $?",
+								"         --stack ",
+								{
+								   "Ref": "AWS::StackName"
+								},
+								"         --resource MyWaitCondition ",
+								"         --region ",
+                                {
+                                    "Ref": "AWS::Region"
+                                }
                             ]
-
-                        ],
-						
-						
-
+                        ]
                     }
-
                 },
-
                 "SubnetId": {
-
                     "Ref": "Subnet"
-
                 }
-
             }
-
-        }
-		
-
+        },
+        "MyWaitCondition":{
+		  "Type":"AWS::CloudFormation::WaitCondition",
+		  "CreationPolicy":{
+		    "ResourceSignal": {
+			   "Timeout":"PT5M",
+			   "Count":"1"
+			}
+		}
     }
-
+  }
 }
