@@ -1,0 +1,30 @@
+{
+	"Resources":{
+		"MyLBListenerRule":{
+			"Type" : "AWS::ElasticLoadBalancingV2::ListenerRule",
+			"Properties" :{
+				"Priority": "2",
+				"Actions" : [{
+					"Type": "redirect",
+					"RedirectConfig" : {
+										  "Host" : "google.com",
+										  "Path" : "/",
+										  "Port" : "443",
+										  "Protocol" : "HTTPS",
+										  "StatusCode" : ["HTTP_301"]
+										}
+				}
+				],
+			"ListenerArn":   "arn:aws:elasticloadbalancing:us-east-1:088138099641:listener/app/Loadbalancerv2/e89c16da84578a3f/2cf6b4e0c21f303c",
+			"Conditions":[{
+				"Field": "path-pattern",
+				"PathPatternConfig":
+				{
+                   "Values" : [{"/files"}]
+                   
+                }
+			}]
+			}
+		}
+	}
+}

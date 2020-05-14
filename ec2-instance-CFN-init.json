@@ -2,13 +2,7 @@
 
     "Parameters": {
 
-        "Subnet": {
-
-            "Description": "Select subnet",
-
-            "Type": "AWS::EC2::Subnet::Id"
-
-        },
+        
 
         "InstanceType": {
 
@@ -186,12 +180,6 @@
 						
 
                     }
-
-                },
-
-                "SubnetId": {
-
-                    "Ref": "Subnet"
 
                 }
 
