@@ -1,0 +1,51 @@
+{
+"Resources":
+{
+		"AutoScalingGroup": {
+		  "Type": "AWS::AutoScaling::AutoScalingGroup",
+		  "Properties": {
+			"AvailabilityZones": { "Fn::GetAZs": "" },
+			"LaunchConfigurationName": { "Ref": "LaunchConfigure" },
+			"DesiredCapacity": "3",
+			"MinSize": "1",
+			"MaxSize": "4"
+		  },
+		  "CreationPolicy": {
+			"ResourceSignal": {
+			  "Count": "3",
+			  "Timeout": "PT15M"
+			}
+		  },
+		  "UpdatePolicy" : {
+			"AutoScalingScheduledAction" : {
+			  "IgnoreUnmodifiedGroupSizeProperties" : "true"
+			},
+			"AutoScalingRollingUpdate" : {
+			  "MinInstancesInService" : "1",
+			  "MaxBatchSize" : "2",
+			  "PauseTime" : "PT1M",
+			  "WaitOnResourceSignals" : "true"
+			}
+		  }
+		},
+		"LaunchConfigure": {
+		  "Type": "AWS::AutoScaling::LaunchConfiguration",
+		  "Properties": {
+			"ImageId": "ami-009d6802948d06e52",
+			"InstanceType": "t2.micro",
+			"UserData": {
+			  "Fn::Base64": {
+				"Fn::Join" : [ "", [
+				  "#!/bin/bash -xe\n",
+				  "yum install -y aws-cfn-bootstrap\n",
+				  "/opt/aws/bin/cfn-signal -e 0 --stack ", { "Ref": "AWS::StackName" },
+				  " --resource AutoScalingGroup ",
+				  " --region ", { "Ref" : "AWS::Region" }, "\n"
+				] ]
+			  }
+			}
+		  }
+		}
+		}
+
+}

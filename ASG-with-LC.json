@@ -1,0 +1,57 @@
+{
+    "Parameters": {
+        "SecurityGroupId": {
+            "Type": "AWS::EC2::SecurityGroup::Id"
+        }
+    },
+    "Resources": {
+        "LaunchConfig": {
+            "Type": "AWS::AutoScaling::LaunchConfiguration",
+            "Properties": {
+                "ImageId": "ami-009d6802948d06e52",
+                "InstanceType": "t2.micro",
+                "LaunchConfigurationName": "LaunchConfig",
+                "PlacementTenancy": "default",
+                "SecurityGroups": [
+                    {
+                        "Ref": "SecurityGroupId"
+                    }
+                ],
+				"UserData":{
+						"Fn::Base64": {
+							"Fn::Join" : [ "", [
+							  "#!/bin/bash -xe\n",
+							  "yum install -y aws-cfn-bootstrap\n",
+							  "yum install httpd -y \n",
+							  "echo 'Hello,Abhishek!!!' >> /var/www/html/index.html \n",
+							  "service httpd start \n",
+							  "chkconfig httpd on \n"
+					         ] 
+						]
+					}
+				
+				}
+            }
+        },
+        "MyASG": {
+		    "DependsOn":"LaunchConfig",
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Properties": {
+                "AutoScalingGroupName": "MyASG",
+                "AvailabilityZones": {"Fn::GetAZs":{
+														"Ref":"AWS::Region"
+													}
+									 },
+                "DesiredCapacity": "2",
+                "HealthCheckGracePeriod": "300",
+                "HealthCheckType": "EC2",
+                "LaunchConfigurationName": "LaunchConfig",
+                "MaxSize": "2",
+                "MinSize": "1",
+                #"TargetGroupARNs": [
+                 #   "arn:aws:elasticloadbalancing:us-east-1:612155163873:targetgroup/TargetGroupv2/ed1a421b07005e9b"
+                #]
+            }
+        }
+    }
+}
