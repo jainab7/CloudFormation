@@ -1,0 +1,59 @@
+{
+	"Parameters":
+	{
+		"SecurityGroupId":{
+				"Type":"AWS::EC2::SecurityGroup::Id"
+		}
+	},
+
+	"Resources":
+	{
+
+		"LaunchTemp":
+		{
+			"Type":"AWS::EC2::LaunchTemplate",
+			"Properties":{
+				"LaunchTemplateData" : {
+						"ImageId" : "ami-009d6802948d06e52",
+						"InstanceType": "t2.micro",
+						"SecurityGroupIds":[{"Ref":"SecurityGroupId"}]
+				
+				},
+				"LaunchTemplateName" : "LaunchTemp"
+			}
+
+		},
+
+		"MyASG":{
+			"DependsOn":"LaunchTemp",
+			"Type" : "AWS::AutoScaling::AutoScalingGroup",
+			"Properties":{
+				"LaunchTemplate":{
+				  "LaunchTemplateId" : {"Ref":"LaunchTemp"},
+				  "Version":{
+							"Fn::GetAtt":[
+							  "LaunchTemp",
+							  "DefaultVersionNumber"
+							]
+						  }
+				},
+				"MaxSize" : "2",
+				"MinSize" : "1",
+				"DesiredCapacity":"1",
+				"HealthCheckGracePeriod":"300",
+				"HealthCheckType": "EC2",
+				"AvailabilityZones":{
+						"Fn::GetAZs":{
+						  "Ref":"AWS::Region"
+						}
+					  }
+
+
+			}
+		}
+
+	    
+
+   }
+
+}

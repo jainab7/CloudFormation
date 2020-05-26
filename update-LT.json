@@ -1,0 +1,70 @@
+{
+	"Parameters":
+	{
+		"SecurityGroupId":{
+				"Type":"AWS::EC2::SecurityGroup::Id"
+		}
+	},
+
+	"Resources":
+	{
+
+		"LaunchTemp":
+		{
+			"Type":"AWS::EC2::LaunchTemplate",
+			"Properties":{
+				"LaunchTemplateData" : {
+						"ImageId" : "ami-009d6802948d06e52",
+						"InstanceType": "t2.micro",
+						"SecurityGroupIds":[{"Ref":"SecurityGroupId"}],
+						"UserData":{
+						  "Fn::Base64": {
+							"Fn::Join" : [ "", [
+							  "#!/bin/bash -xe\n",
+							  "yum install -y aws-cfn-bootstrap\n",
+							  "yum install httpd -y \n",
+							  "echo 'Hello,Abhishek!!!' >> /var/www/html/index.html \n",
+							  "service httpd start \n",
+							  "chkconfig httpd on \n"
+					              ] 
+						       ]
+					      }
+				
+				        }
+				
+				},
+				"LaunchTemplateName" : "LaunchTemp"
+				
+				
+			}
+
+		},
+
+		"MyASG":{
+			"DependsOn":"LaunchTemp",
+			"Type" : "AWS::AutoScaling::AutoScalingGroup",
+			"Properties":{
+				"LaunchTemplate":{
+				  "LaunchTemplateId" : {"Ref":"LaunchTemp"},
+				  "Version":"2"
+				},
+				"MaxSize" : "2",
+				"MinSize" : "1",
+				"DesiredCapacity":"1",
+				"HealthCheckGracePeriod":"300",
+				"HealthCheckType": "EC2",
+				"AvailabilityZones":{
+						"Fn::GetAZs":{
+						  "Ref":"AWS::Region"
+						}
+					  }
+
+
+			}
+		}
+
+	    
+
+   }
+
+}
