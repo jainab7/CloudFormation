@@ -1,0 +1,141 @@
+{
+    "Parameters": {
+        "SecurityGroupId": {
+            "Type": "AWS::EC2::SecurityGroup::Id"
+        }
+    },
+    "Resources": {
+        "LaunchConfig": {
+            "Type": "AWS::AutoScaling::LaunchConfiguration",
+            "Properties": {
+                "ImageId": "ami-009d6802948d06e52",
+                "InstanceType": "t2.micro",
+                "LaunchConfigurationName": "LaunchConfig",
+                "PlacementTenancy": "default",
+                "SecurityGroups": [
+                    {
+                        "Ref": "SecurityGroupId"
+                    }
+                ],
+				"UserData":{
+						"Fn::Base64": {
+							"Fn::Join" : [ "", [
+							  "#!/bin/bash -xe\n",
+							  "yum install -y aws-cfn-bootstrap\n",
+							  "yum install httpd -y \n",
+							  "echo 'Hello,Abhishek!!!' >> /var/www/html/index.html \n",
+							  "service httpd start \n",
+							  "chkconfig httpd on \n"
+					         ] 
+						]
+					}
+				}
+            }
+        },
+        "MyASG": {
+		    "DependsOn":"LaunchConfig",
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Properties": {
+                "AutoScalingGroupName": "MyASG",
+                "AvailabilityZones": {"Fn::GetAZs":{
+														"Ref":"AWS::Region"
+													}
+									 },
+                "HealthCheckGracePeriod": "300",
+                "HealthCheckType": "EC2",
+                "LaunchConfigurationName": "LaunchConfig",
+                "MaxSize": "3",
+                "MinSize": "2"
+            }
+        },
+		"MyCPUUpPolicy":
+		{
+		  "Type":"AWS::AutoScaling::ScalingPolicy",
+		  "Properties":{
+						  "AutoScalingGroupName" : {"Ref":"MyASG"},
+						  "PolicyType" : "StepScaling",
+						  "MetricAggregationType": "Average",
+						  "AdjustmentType":"ChangeInCapacity",
+						  "EstimatedInstanceWarmup":60,
+						  "StepAdjustments":[
+							  {
+								"MetricIntervalLowerBound":0,
+								"MetricIntervalUpperBound":10,
+								"ScalingAdjustment":1
+							  },
+							  {
+								"MetricIntervalLowerBound":10,
+								"MetricIntervalUpperBound":20,
+								"ScalingAdjustment":2
+							  },
+							  {
+								"MetricIntervalLowerBound":20,
+								"ScalingAdjustment":2
+							  }
+						  ]
+		  } 
+		},
+		
+		"MyCPUDownPolicy":
+		{
+		  "Type":"AWS::AutoScaling::ScalingPolicy",
+		  "Properties":{
+						  "AutoScalingGroupName" : {"Ref":"MyASG"},
+						  "PolicyType" : "StepScaling",
+						  "MetricAggregationType": "Average",
+						  "AdjustmentType":"ChangeInCapacity",
+						  "EstimatedInstanceWarmup":60,
+						  "StepAdjustments":[
+							  {
+								"MetricIntervalLowerBound":-10,
+								"MetricIntervalUpperBound":0,
+								"ScalingAdjustment":-1
+							  },
+							  {
+								"MetricIntervalLowerBound":-20,
+								"MetricIntervalUpperBound":-10,
+								"ScalingAdjustment":-1
+							  },
+							  {
+								"MetricIntervalUpperBound":-20,
+								"ScalingAdjustment":-1
+							  }
+						  ]
+		  } 
+		},
+		
+		"CPUUtilizationAlarmHigh":{
+			"Type": "AWS::CloudWatch::Alarm",
+			"Properties": {
+				"AlarmDescription": "Scale-up if CPU > 40% for 5 minutes",
+				"MetricName": "CPUUtilization",
+				"Namespace": "AWS/EC2",
+				"Statistic": "Average",
+				"Period": "300",
+				"EvaluationPeriods": "1",
+				"Threshold": "40",
+				"AlarmActions": [ { "Ref": "MyCPUUpPolicy" } ],
+				"Dimensions":[{"Name": "AutoScalingGroupName","Value": { "Ref": "MyASG" }}],
+				"ComparisonOperator": "GreaterThanThreshold"
+			}
+		},
+		
+		"CPUUtilizationAlarmLow":{
+			"Type": "AWS::CloudWatch::Alarm",
+			"Properties": {
+				"AlarmDescription": "Scale-up if CPU < 30% for 5 minutes",
+				"MetricName": "CPUUtilization",
+				"Namespace": "AWS/EC2",
+				"Statistic": "Average",
+				"Period": "300",
+				"EvaluationPeriods": "1",
+				"Threshold": "30",
+				"AlarmActions": [ { "Ref": "MyCPUDownPolicy" } ],
+				"Dimensions":[{"Name": "AutoScalingGroupName","Value": { "Ref": "MyASG" }}],
+				"ComparisonOperator": "LessThanThreshold"
+			}
+		}
+			
+		
+    }
+}
