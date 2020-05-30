@@ -1,0 +1,76 @@
+{
+ "Parameters":{
+   
+   "SecurityGrp":{
+				"Type":"AWS::EC2::SecurityGroup::Id"
+		},
+	
+	"DatabaseName":{
+				"Type":"String"
+	},
+	"RDSName":{
+				"Type":"String"
+	},
+	"RDSUserName":{
+                "Type":"String"	
+	},
+	"RDSPassword":{
+				"NoEcho" : "true",
+				"Type":"String"
+	},
+	
+	"Subnets":{
+				"Type":"List<AWS::EC2::Subnet::Id>"
+	},
+	
+	"SubnetGroup":{
+				"Type":"String",
+				"Description":"Name of Subnet group"
+	}
+ 
+ },
+ "Resources": {
+        "MyDB": {
+		    "Type" : "AWS::RDS::DBInstance",
+			"DependsOn" : "DBSubnetGrp",
+			"Properties" : {
+				"AllocatedStorage" : 50,
+				"BackupRetentionPeriod" : 1,
+				"CopyTagsToSnapshot" : "true",
+				"DBInstanceClass" : "db.t3.medium",
+				"DBInstanceIdentifier" : {"Ref":"RDSName"},
+				"DBName" : {"Ref":"DatabaseName"},
+				"DBSubnetGroupName" : {"Ref":"DBSubnetGrp"},
+				"DeleteAutomatedBackups" : "true",
+				"DeletionProtection" : "False",
+				"EnablePerformanceInsights" : "true",
+				"Engine" : "MariaDB",
+				"EngineVersion" : "10.4",
+				"MasterUsername" : {"Ref":"RDSUserName"},
+				"MasterUserPassword" : {"Ref":"RDSPassword"},
+				"MultiAZ" : "true",
+				"Port" : "3306",
+				"PubliclyAccessible" : "False",
+				"StorageEncrypted" : "False",
+				"StorageType" : "gp2",
+				"VPCSecurityGroups" : [ {"Ref":"SecurityGrp"} ]
+    
+			}
+	
+		},
+	
+		"DBSubnetGrp":
+		{
+			"Type" : "AWS::RDS::DBSubnetGroup",
+			"Properties" : {
+			"DBSubnetGroupDescription" : "Subnet group for RDS instance",
+			"DBSubnetGroupName" : {"Ref":"SubnetGroup"},
+			"SubnetIds" : {"Ref":"Subnets"}
+			
+			}
+		}
+		
+		
+  }
+  
+}

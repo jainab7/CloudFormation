@@ -1,0 +1,59 @@
+{
+
+ "Parameters":{
+   
+   "SecurityGrp":{
+				"Type":"AWS::EC2::SecurityGroup::Id"
+		},
+	"SourceDB":{
+	            "Type" : "String"
+	},
+	"DatabaseName":{
+				"Type":"String"
+	},
+	"RDSName":{
+				"Type":"String"
+	},
+	"RDSUserName":{
+                "Type":"String"	
+	},
+	"RDSPassword":{
+				"Type":"String"
+	}
+ 
+ },
+ 
+ "Resources": {
+        "DBReplica": {
+		    "Type" : "AWS::RDS::DBInstance",
+			"Properties" : {
+				"AllocatedStorage" : 50,
+				"BackupRetentionPeriod" : 1,
+				"CopyTagsToSnapshot" : "true",
+				"DBInstanceClass" : "db.t3.medium",
+				"DBInstanceIdentifier" : {"Ref":"RDSName"},
+				"DBName" : {"Ref":"DatabaseName"},
+				"DeleteAutomatedBackups" : "true",
+				"DeletionProtection" : "False",
+				"EnablePerformanceInsights" : "true",
+				"Engine" : "MariaDB",
+				"EngineVersion" : "10.4",
+				"MasterUsername" : {"Ref":"RDSUserName"},
+				"MasterUserPassword" : {"Ref":"RDSPassword"},
+				"MultiAZ" : "true",
+				"Port" : "3306",
+				"PubliclyAccessible" : "False",
+				"StorageEncrypted" : "False",
+				"StorageType" : "gp2",
+				"SourceDBInstanceIdentifier" : {"Ref":"SourceDB"},
+				"SourceRegion" : "us-east-1",
+				"VPCSecurityGroups" : [ {"Ref":"SecurityGrp"} ]
+    
+	  }
+	
+	}
+		
+		
+  }
+  
+}
