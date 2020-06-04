@@ -1,0 +1,107 @@
+{
+ "Parameters":{
+   "SecurityGrp":{
+				"Type":"AWS::EC2::SecurityGroup::Id"
+		},
+	"DatabaseName":{
+				"Type":"String"
+	},
+	"RDSName1":{
+				"Type":"String"
+	},
+	"RDSName2":{
+				"Type":"String"
+	},
+	"RDSClusterName":{
+				"Type":"String"
+	},
+	"RDSUserName":{
+                "Type":"String"	
+	},
+	"RDSPassword":{
+				"NoEcho" : "true",
+				"Type":"String"
+	},
+	"Subnets":{
+				"Type":"List<AWS::EC2::Subnet::Id>"
+	},
+	"SubnetGroup":{
+				"Type":"String",
+				"Description":"Name of Subnet group"
+	}
+ },
+ "Resources": {
+        "MyCluster": {
+		    "Type" : "AWS::RDS::DBCluster",
+			"DependsOn" : "DBSubnetGrp",
+			"Properties" : {
+				"BackupRetentionPeriod" : 1,
+				"DBClusterIdentifier" : {"Ref":"RDSClusterName"},
+				"DatabaseName" : {"Ref":"DatabaseName"},
+				"DBSubnetGroupName" : {"Ref":"DBSubnetGrp"},
+				"DBClusterParameterGroupName": {"Ref": "RDSDBClusterParameterGroup"},
+				"DeletionProtection" : "False",
+				"Engine" : "aurora",
+				"MasterUsername" : {"Ref":"RDSUserName"},
+				"MasterUserPassword" : {"Ref":"RDSPassword"},
+				"Port" : "3306",
+				"StorageEncrypted" : "False",
+				"EnableCloudwatchLogsExports" : ["slowquery","general","error","audit"],
+				"VpcSecurityGroupIds" : [ {"Ref":"SecurityGrp"} ]
+			}
+		},
+		"RDSDB1": {
+			"Type":"AWS::RDS::DBInstance",
+			"DependsOn" : "DBSubnetGrp",
+			"Properties":{
+			    "DBInstanceClass" : "db.t3.medium",
+				"DBSubnetGroupName" : {"Ref":"DBSubnetGrp"},
+				"DBInstanceIdentifier" : {"Ref":"RDSName1"},
+			    "DBParameterGroupName": {"Ref": "RDSDBParameterGroup"},
+				"Engine": "aurora",
+				"DBClusterIdentifier": {"Ref": "MyCluster"}
+			}
+		},
+		"RDSDB2": {
+			"Type":"AWS::RDS::DBInstance",
+			"DependsOn" : "DBSubnetGrp",
+			"Properties":{
+			    "DBInstanceClass" : "db.t3.medium",
+				"DBSubnetGroupName" : {"Ref":"DBSubnetGrp"},
+				"DBInstanceIdentifier" : {"Ref":"RDSName2"},
+			    "DBParameterGroupName": {"Ref": "RDSDBParameterGroup"},
+				"Engine": "aurora",
+				"DBClusterIdentifier": {"Ref": "MyCluster"}
+			}
+		},
+		"DBSubnetGrp":
+		{
+			"Type" : "AWS::RDS::DBSubnetGroup",
+			"Properties" : {
+			"DBSubnetGroupDescription" : "Subnet group for RDS instance",
+			"DBSubnetGroupName" : {"Ref":"SubnetGroup"},
+			"SubnetIds" : {"Ref":"Subnets"}
+			}
+		},
+		"RDSDBClusterParameterGroup": {
+        "Type": "AWS::RDS::DBClusterParameterGroup",
+        "Properties": {
+            "Description": "CloudFormation Sample Aurora Cluster Parameter Group",
+            "Family": "aurora5.6",
+            "Parameters": {
+                "time_zone": "US/Eastern"
+            }
+        }
+    },
+		 "RDSDBParameterGroup": {
+        "Type": "AWS::RDS::DBParameterGroup",
+        "Properties": {
+            "Description": "CloudFormation Sample Aurora Parameter Group",
+            "Family": "aurora5.6",
+            "Parameters": {
+                "sql_mode": "IGNORE_SPACE"
+            }
+        }
+    }
+  }
+}

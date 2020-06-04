@@ -1,0 +1,69 @@
+{
+  "Parameters" : {
+      "SecurityGrp":{
+				"Type":"AWS::EC2::SecurityGroup::Id"
+		},
+	"DatabaseName":{
+				"Type":"String"
+	},
+	
+	"RDSClusterName":{
+				"Type":"String"
+	},
+	"DBUsername":{
+                "Type":"String"	
+	},
+	"DBPassword":{
+				"NoEcho" : "true",
+				"Type":"String"
+	},
+	"Subnets":{
+				"Type":"List<AWS::EC2::Subnet::Id>"
+	},
+	"SubnetGroup":{
+				"Type":"String",
+				"Description":"Name of Subnet group"
+	},
+	"MinCapacity":{
+				"Type":"Number"
+	
+	},
+	"MaxCapacity":{
+				"Type":"Number"
+	
+	}
+  },
+
+  "Resources" : {
+      "RDSCluster" : {
+          "Type": "AWS::RDS::DBCluster",
+		  "DependsOn":"DBSubnetGrp",
+          "Properties" : {
+              "MasterUsername" : {"Ref": "DBUsername"},
+              "MasterUserPassword" : {"Ref": "DBPassword"},
+			  "DatabaseName" : {"Ref":"DatabaseName"},
+			  "DBSubnetGroupName" : {"Ref":"DBSubnetGrp"},
+              "DBClusterIdentifier" : {"Ref":"RDSClusterName"},
+              "Engine" : "aurora",
+              "EngineVersion" : "5.6.10a",
+              "EngineMode" : "serverless",				  
+              "ScalingConfiguration" : {
+                  "AutoPause" : "true",
+                  "MinCapacity" : {"Ref":"MinCapacity"},
+                  "MaxCapacity" : {"Ref":"MaxCapacity"},
+                  "SecondsUntilAutoPause" : 1000
+              }
+          }
+      },
+	  
+	  "DBSubnetGrp":
+		{
+			"Type" : "AWS::RDS::DBSubnetGroup",
+			"Properties" : {
+			"DBSubnetGroupDescription" : "Subnet group for RDS instance",
+			"DBSubnetGroupName" : {"Ref":"SubnetGroup"},
+			"SubnetIds" : {"Ref":"Subnets"}
+			}
+		}
+  }
+}

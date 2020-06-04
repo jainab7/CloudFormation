@@ -1,0 +1,88 @@
+{
+  "Parameters" : {
+      "SecurityGrp":{
+				"Type":"AWS::EC2::SecurityGroup::Id"
+		},
+	"DatabaseName":{
+				"Type":"String"
+	},
+	"RDSName1":{
+				"Type":"String"
+	},
+	"RDSName2":{
+				"Type":"String"
+	},
+	"RDSClusterName":{
+				"Type":"String"
+	},
+	"DBUsername":{
+                "Type":"String"	
+	},
+	"DBPassword":{
+				"NoEcho" : "true",
+				"Type":"String"
+	},
+	"Subnets":{
+				"Type":"List<AWS::EC2::Subnet::Id>"
+	},
+	"SubnetGroup":{
+				"Type":"String",
+				"Description":"Name of Subnet group"
+	}
+  },
+  "Resources" : {
+      "RDSCluster" : {
+	      "DependsOn":"DBSubnetGrp",
+          "Type": "AWS::RDS::DBCluster",
+          "Properties" : {
+              "MasterUsername" : {
+                  "Ref" : "DBUsername"
+              },
+              "MasterUserPassword" : {
+                  "Ref" : "DBPassword"
+              },
+              "DBClusterIdentifier" : {"Ref":"RDSClusterName"},
+			  "DatabaseName" : {"Ref":"DatabaseName"},
+              "Engine" : "aurora-postgresql",
+              "EngineVersion" : "10.7",
+              "DBClusterParameterGroupName" : "default.aurora-postgresql10",
+              "EnableCloudwatchLogsExports" : ["postgresql"]
+          }
+      },
+  "RDSDBInstance1": {
+        "Type" : "AWS::RDS::DBInstance",
+		"DependsOn":"DBSubnetGrp",
+        "Properties" : {
+            "DBInstanceIdentifier" : {"Ref":"RDSName1"},
+            "Engine" : "aurora-postgresql",
+            "DBClusterIdentifier" : {
+                "Ref" : "RDSCluster"
+            },
+            "PubliclyAccessible" : "false",
+            "DBInstanceClass" : "db.t3.medium"
+        }
+    },
+  "RDSDBInstance2": {
+		"DependsOn":"DBSubnetGrp",
+        "Type" : "AWS::RDS::DBInstance",
+        "Properties" : {
+            "DBInstanceIdentifier" : {"Ref":"RDSName2"},
+            "Engine" : "aurora-postgresql",
+            "DBClusterIdentifier" : {
+                "Ref" : "RDSCluster"
+            },
+            "PubliclyAccessible" : "false",
+            "DBInstanceClass" : "db.t3.medium"
+        }
+    },
+  "DBSubnetGrp":
+		{
+			"Type" : "AWS::RDS::DBSubnetGroup",
+			"Properties" : {
+			"DBSubnetGroupDescription" : "Subnet group for RDS instance",
+			"DBSubnetGroupName" : {"Ref":"SubnetGroup"},
+			"SubnetIds" : {"Ref":"Subnets"}
+			}
+		}
+  }
+}
