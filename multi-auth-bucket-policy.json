@@ -1,0 +1,18 @@
+{
+    "Version": "2012-10-17",
+    "Id": "512",
+    "Statement": [
+        {
+            "Sid": "",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "s3:*",
+            "Resource": "arn:aws:s3:::jaina500/myfolder/*",
+            "Condition": {
+                "Null": {
+                    "aws:MultiFactorAuthAge": true
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,22 @@
+---
+Parameters:
+    SSHSecurityGroup:
+       Type: AWS::EC2::SecurityGroup::Id
+       Description: Security Group for SSH
+
+Resources:
+    MyInstance:
+        Type: AWS::EC2::Instance
+        Properties:
+           ImageId: ami-009d6802948d06e52
+           InstanceType: t2.micro
+           SecurityGroupIds:
+              - !Ref SSHSecurityGroup
+           UserData:
+             Fn::Base64: |
+                #!/bin/bash -xe
+                yum update -y
+                yum install -y httpd
+                systemctl start httpd
+                systemctl enable httpd
+                echo "Hello Abhishek, you got this !!!"> /var/www/html/index.html

@@ -1,0 +1,20 @@
+---
+Parameters:
+  SSHKey:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of existing Key pair
+
+Resources:
+   myStack:
+     Type: AWS::CloudFormation::Stack
+     Properties:
+       TemplateURL: https://s3.amazonaws.com/cloudformation-templates-us-east-1/EC2InstanceWithSecurityGroupSample.template
+       Parameters:
+         KeyName: !Ref SSHKey
+         InstanceType: t2.micro
+         SSHLocation: "0.0.0.0/0"
+
+Outputs:
+  StackRef:
+      Value: !Ref myStack
+    
